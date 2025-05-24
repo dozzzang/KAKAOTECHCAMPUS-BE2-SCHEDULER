@@ -2,6 +2,7 @@ package com.example.schedulerproject.repository;
 
 import com.example.schedulerproject.dto.ScheduleResponseDto;
 import com.example.schedulerproject.entity.Schedule;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,12 +21,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 @Repository
+@RequiredArgsConstructor // DI
 public class JdbcScheduleRepository implements ScheduleRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public JdbcScheduleRepository(DataSource dataSource) {
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
-    }
 
     @Override
     public ScheduleResponseDto saveSchedule(Schedule schedule) {
