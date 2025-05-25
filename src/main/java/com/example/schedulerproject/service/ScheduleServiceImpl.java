@@ -3,7 +3,9 @@ package com.example.schedulerproject.service;
 import com.example.schedulerproject.dto.ScheduleRequestDto;
 import com.example.schedulerproject.dto.ScheduleResponseDto;
 import com.example.schedulerproject.entity.Schedule;
+import com.example.schedulerproject.entity.User;
 import com.example.schedulerproject.repository.ScheduleRepository;
+import com.example.schedulerproject.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,21 +19,28 @@ import java.util.List;
 public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final ScheduleChecker scheduleChecker;
+    private final UserService userService;
 
     @Override
     public ScheduleResponseDto saveSchedule(ScheduleRequestDto dto) {
         scheduleChecker.checkCreateRequest(dto);
-        Schedule schedule = new Schedule(dto.getContentTodo(),dto.getUsername(),dto.getPassword(),LocalDateTime.now(),LocalDateTime.now());
+        User user = userService.findUserByUsernameAndEmail(dto.getUsername(), dto.getEmail());
+        if(user == null) {
+            user = userService.createUser(dto);
+        } else {
+            scheduleChecker.checkPassword(dto.getPassword(), user.getPassword());
+        }
+        Schedule schedule = new Schedule(dto.getContentTodo(),LocalDateTime.now(),LocalDateTime.now(),user.getUserId());
         return scheduleRepository.saveSchedule(schedule);
     }
 
     @Override
-    public List<ScheduleResponseDto> findAllSchedules(String updateDate, String username) {
+    public List<ScheduleResponseDto> findAllSchedules(String updateDate, String username,Long userId) {
 //        if(updateDate == null && username == null) {
 //            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"At least, updateDate or username is required.");
 //        }     SRP 개선
-        scheduleChecker.checkQueryParams(updateDate,username);
-        return scheduleRepository.findAllSchedules(updateDate,username);
+        scheduleChecker.checkQueryParams(updateDate,username,userId);
+        return scheduleRepository.findAllSchedules(updateDate,username,userId);
     }
 
     @Override
@@ -51,8 +60,12 @@ public class ScheduleServiceImpl implements ScheduleService {
 //        if(!schedule.getPassword().equals(dto.getPassword())) {
 //            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Do not match password");
 //        }  SRP 개선
-        scheduleChecker.checkPassword(dto.getPassword(),schedule.getPassword());
-        int updatedRow = scheduleRepository.updateSchedule(scheduleId,dto.getContentTodo(),dto.getUsername());
+        User user = userService.findUserByUserIdOrElseThrow(schedule.getUserId());
+        scheduleChecker.checkPassword(dto.getPassword(),user.getPassword());
+
+        //user update 필요
+        userService.updateUser(user.getUserId(),dto.getUsername(),dto.getEmail());
+        int updatedRow = scheduleRepository.updateSchedule(scheduleId,dto.getContentTodo());
         if (updatedRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Does not exist id = " + scheduleId);
         }
@@ -67,7 +80,8 @@ public class ScheduleServiceImpl implements ScheduleService {
 //        if(!schedule.getPassword().equals(dto.getPassword())) {
 //            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Do not match password");
 //        }     SRP 개선
-        scheduleChecker.checkPassword(dto.getPassword(),schedule.getPassword());
+        User user = userService.findUserByUserIdOrElseThrow(schedule.getUserId());
+        scheduleChecker.checkPassword(dto.getPassword(),user.getPassword());
         int deleteRow = scheduleRepository.deleteSchedule(scheduleId);
         if(deleteRow == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Does not exist id = " + scheduleId);

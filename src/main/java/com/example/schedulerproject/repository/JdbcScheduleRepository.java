@@ -33,34 +33,60 @@ public class JdbcScheduleRepository implements ScheduleRepository {
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("content_todo", schedule.getContentTodo());
-        parameters.put("username", schedule.getUsername());
-        parameters.put("password", schedule.getPassword());
         parameters.put("create_date", schedule.getCreateDate());
         parameters.put("update_date", schedule.getUpdateDate());
+        parameters.put("user_id", schedule.getUserId());
 
         Number key = jdbcInsert.executeAndReturnKey(new MapSqlParameterSource(parameters));
 
-        return new ScheduleResponseDto(key.longValue(), schedule.getContentTodo(), schedule.getUsername(), schedule.getCreateDate(), schedule.getUpdateDate());
+        Schedule existingSchedule = findScheduleByScheduleIdOrElseThrow(key.longValue());
+        return new ScheduleResponseDto(existingSchedule);
     }
 
 
     @Override
-    public List<ScheduleResponseDto> findAllSchedules(String updateDate, String username) {
-        String query = "SELECT * FROM schedule";
+    public List<ScheduleResponseDto> findAllSchedules(String updateDate, String username,Long userId) {
+        String query =  "SELECT s.schedule_id, s.content_todo, s.create_date, s.update_date, s.user_id, " +
+                "u.username, u.email " +
+                "FROM schedule s JOIN users u ON s.user_id = u.user_id";
         List<String> values = new ArrayList<>();
-        if (updateDate != null && username != null) {
-            query += " WHERE DATE(update_date) = ? AND username = ?";
+        if (updateDate != null && username != null && userId != null) {
+            // 3개 조건 모두 있는 경우
+            query += " WHERE DATE(s.update_date) = ? AND u.username = ? AND s.user_id = ?";
             values.add(updateDate);
             values.add(username);
+            values.add(userId.toString());
+        } else if (updateDate != null && username != null) {
+            // updateDate + username
+            query += " WHERE DATE(s.update_date) = ? AND u.username = ?";
+            values.add(updateDate);
+            values.add(username);
+        } else if (updateDate != null && userId != null) {
+            // updateDate + userId
+            query += " WHERE DATE(s.update_date) = ? AND s.user_id = ?";
+            values.add(updateDate);
+            values.add(userId.toString());
+        } else if (username != null && userId != null) {
+            // username + userId
+            query += " WHERE u.username = ? AND s.user_id = ?";
+            values.add(username);
+            values.add(userId.toString());
         } else if (updateDate != null) {
-            query += " WHERE DATE(update_date) = ?";
+            // updateDate만
+            query += " WHERE DATE(s.update_date) = ?";
             values.add(updateDate);
         } else if (username != null) {
-            query += " WHERE username = ?";
+            // username만
+            query += " WHERE u.username = ?";
             values.add(username);
+        } else if (userId != null) {
+            // userId만 (Lv3 추가)
+            query += " WHERE s.user_id = ?";
+            values.add(userId.toString());
         }
+        // 조건이 하나도 없으면 전체 조회
 
-        query += " ORDER BY update_date DESC";
+        query += " ORDER BY s.update_date DESC";
 
         return jdbcTemplate.query(query, scheduleRowMapper(), values.toArray());
     }
@@ -72,6 +98,7 @@ public class JdbcScheduleRepository implements ScheduleRepository {
                         rs.getLong("schedule_id"),
                         rs.getString("content_todo"),
                         rs.getString("username"),
+                        rs.getString("email"),
                         rs.getTimestamp("create_date").toLocalDateTime(),
                         rs.getTimestamp("update_date").toLocalDateTime()
                 );
@@ -81,16 +108,19 @@ public class JdbcScheduleRepository implements ScheduleRepository {
 
     @Override
     public Schedule findScheduleByScheduleIdOrElseThrow(Long scheduleId) {
-        List<Schedule> result = jdbcTemplate.query("select * from schedule where schedule_id = ?",scheduleRowMapperV2(),scheduleId);
+        String query = "SELECT s.schedule_id, s.content_todo, s.create_date, s.update_date, s.user_id, " +
+                "u.username, u.email " +
+                "FROM schedule s JOIN users u ON s.user_id = u.user_id " +
+                "WHERE s.schedule_id = ?";
+        List<Schedule> result = jdbcTemplate.query(query,scheduleRowMapperV2(),scheduleId);
         return result.stream().findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Does not exists schedule id = " + scheduleId));
     }
 
     @Override
-    public int updateSchedule(Long scheduleId, String contentTodo, String username) {
+    public int updateSchedule(Long scheduleId, String contentTodo) {
         return jdbcTemplate.update(
-                "UPDATE schedule SET content_todo = ?, username = ?, update_date = ? WHERE schedule_id = ?",
+                "UPDATE schedule SET content_todo = ?,  update_date = ? WHERE schedule_id = ?",
                 contentTodo,
-                username,
                 LocalDateTime.now(),
                 scheduleId
         );
@@ -108,10 +138,11 @@ public class JdbcScheduleRepository implements ScheduleRepository {
                 return new Schedule(
                         rs.getLong("schedule_id"),
                         rs.getString("content_todo"),
-                        rs.getString("username"),
-                        rs.getString("password"),
                         rs.getTimestamp("create_date").toLocalDateTime(),
-                        rs.getTimestamp("update_date").toLocalDateTime()
+                        rs.getTimestamp("update_date").toLocalDateTime(),
+                        rs.getLong("user_id"),
+                        rs.getString("username"),
+                        rs.getString("email")
                 );
             }
         };

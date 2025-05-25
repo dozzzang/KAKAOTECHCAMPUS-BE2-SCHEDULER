@@ -7,18 +7,19 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 public class Schedule {
-    private Long id;
+    private Long scheduleId;
     private String contentTodo;
-    private String username;
-    private String password;
     private LocalDateTime createDate;
     private LocalDateTime updateDate;
+    private Long userId;
 
-    public Schedule(String contentTodo,String username,String password,LocalDateTime createDate, LocalDateTime updateDate) {
+    private String username;
+    private String email;
+
+    public Schedule(String contentTodo, LocalDateTime createDate, LocalDateTime updateDate, Long userId) {
         this.contentTodo = contentTodo;
-        this.username = username;
-        this.password = password;
         this.createDate = createDate;
         this.updateDate = updateDate;
+        this.userId = userId;
     }
 }

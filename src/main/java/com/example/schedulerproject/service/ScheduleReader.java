@@ -8,6 +8,6 @@ import java.util.List;
 
 //공통 관심사에 따라 하나의 Interface보단 여러 Interface ISP
 public interface ScheduleReader {
-    List<ScheduleResponseDto> findAllSchedules(String updateDate, String username);
+    List<ScheduleResponseDto> findAllSchedules(String updateDate, String username,Long userId);
     ScheduleResponseDto findScheduleById(Long scheduleId);
 }

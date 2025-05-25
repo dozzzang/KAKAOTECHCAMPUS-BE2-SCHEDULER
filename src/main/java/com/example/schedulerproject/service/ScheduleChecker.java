@@ -18,8 +18,8 @@ public class ScheduleChecker {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"ContentTodo, username, and password are required values.");
             }
         }
-        public void checkQueryParams(String updateDate, String username) {
-            if(updateDate == null && username == null) {
+        public void checkQueryParams(String updateDate, String username,Long userId) {
+            if(updateDate == null && username == null && userId == null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"At least updateDate or username is required");
             }
         }
