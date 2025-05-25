@@ -4,6 +4,7 @@ import com.example.schedulerproject.dto.PagingRequestDto;
 import com.example.schedulerproject.dto.PagingResponseDto;
 import com.example.schedulerproject.dto.ScheduleResponseDto;
 import com.example.schedulerproject.entity.Schedule;
+import com.example.schedulerproject.exception.ScheduleException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
@@ -115,7 +116,8 @@ public class JdbcScheduleRepository implements ScheduleRepository {
                 "FROM schedule s JOIN users u ON s.user_id = u.user_id " +
                 "WHERE s.schedule_id = ?";
         List<Schedule> result = jdbcTemplate.query(query,scheduleRowMapperV2(),scheduleId);
-        return result.stream().findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Does not exists schedule id = " + scheduleId));
+        //Lv 5
+        return result.stream().findAny().orElseThrow(() -> new ScheduleException(scheduleId));
     }
 
     @Override
