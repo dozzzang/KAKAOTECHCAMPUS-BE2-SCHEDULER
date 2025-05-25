@@ -1,5 +1,6 @@
 package com.example.schedulerproject.service;
 
+import com.example.schedulerproject.dto.PagingResponseDto;
 import com.example.schedulerproject.dto.ScheduleResponseDto;
 import com.example.schedulerproject.entity.Schedule;
 import com.example.schedulerproject.repository.ScheduleRepository;
@@ -10,4 +11,5 @@ import java.util.List;
 public interface ScheduleReader {
     List<ScheduleResponseDto> findAllSchedules(String updateDate, String username,Long userId);
     ScheduleResponseDto findScheduleById(Long scheduleId);
+    PagingResponseDto findSchedulesPage(int pageNum, int pageSize);
 }

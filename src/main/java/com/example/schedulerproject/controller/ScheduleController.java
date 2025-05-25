@@ -1,5 +1,7 @@
 package com.example.schedulerproject.controller;
 
+import com.example.schedulerproject.dto.PagingRequestDto;
+import com.example.schedulerproject.dto.PagingResponseDto;
 import com.example.schedulerproject.dto.ScheduleRequestDto;
 import com.example.schedulerproject.dto.ScheduleResponseDto;
 import com.example.schedulerproject.service.ScheduleService;
@@ -36,6 +38,13 @@ public class ScheduleController {
     public ResponseEntity<ScheduleResponseDto> findScheduleById(
             @PathVariable long scheduleId) {
         return new ResponseEntity<>(scheduleService.findScheduleById(scheduleId),HttpStatus.OK);
+    }
+
+    @GetMapping("/page")
+    public PagingResponseDto findSchedulesPage(
+            @RequestParam int pageNum,
+            @RequestParam int pageSize) {
+        return scheduleService.findSchedulesPage(pageNum,pageSize);
     }
 
     @PutMapping("/{scheduleId}")

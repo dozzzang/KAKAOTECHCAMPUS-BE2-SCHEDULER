@@ -1,5 +1,7 @@
 package com.example.schedulerproject.service;
 
+import com.example.schedulerproject.dto.PagingRequestDto;
+import com.example.schedulerproject.dto.PagingResponseDto;
 import com.example.schedulerproject.dto.ScheduleRequestDto;
 import com.example.schedulerproject.dto.ScheduleResponseDto;
 import com.example.schedulerproject.entity.Schedule;
@@ -47,6 +49,12 @@ public class ScheduleServiceImpl implements ScheduleService {
     public ScheduleResponseDto findScheduleById(Long scheduleId) {
         Schedule schedule = scheduleRepository.findScheduleByScheduleIdOrElseThrow(scheduleId);
         return new ScheduleResponseDto(schedule);
+    }
+
+    @Override
+    public PagingResponseDto findSchedulesPage(int pageNum, int pageSize) {
+        PagingRequestDto pagingRequestDto = new PagingRequestDto(pageNum, pageSize);
+        return scheduleRepository.findSchedulesPage(pagingRequestDto);
     }
 
     @Transactional

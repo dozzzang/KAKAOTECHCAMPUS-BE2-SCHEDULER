@@ -1,5 +1,7 @@
 package com.example.schedulerproject.repository;
 
+import com.example.schedulerproject.dto.PagingRequestDto;
+import com.example.schedulerproject.dto.PagingResponseDto;
 import com.example.schedulerproject.dto.ScheduleResponseDto;
 import com.example.schedulerproject.entity.Schedule;
 import lombok.RequiredArgsConstructor;
@@ -129,6 +131,29 @@ public class JdbcScheduleRepository implements ScheduleRepository {
     @Override
     public int deleteSchedule(Long scheduleId) {
         return jdbcTemplate.update("delete from schedule where schedule_id = ?",scheduleId);
+    }
+
+    @Override
+    public PagingResponseDto findSchedulesPage(PagingRequestDto pagingRequestDto) {
+        String query = "SELECT s.schedule_id, s.content_todo, s.create_date, s.update_date, s.user_id, " +
+                "u.username, u.email " +
+                "FROM schedule s JOIN users u ON s.user_id = u.user_id " +
+                "ORDER BY s.update_date DESC " + //내림차순은 유지?
+                "LIMIT ? OFFSET ?"; // 가져올 개수 제한 ? 건너뛸 개수
+        List<ScheduleResponseDto> schedules = jdbcTemplate.query(
+                query,
+                scheduleRowMapper(),
+                pagingRequestDto.getPageSize(),
+                pagingRequestDto.calculateDifference()
+        );
+        //SELECT * 대신 SELECT COUNT(*)로 단일 숫자 가져오기..
+        query = "SELECT COUNT(*) FROM schedule s JOIN users u ON s.user_id = u.user_id";
+        // 쿼리,변환기,파라미터값
+        int totalSchedules = jdbcTemplate.queryForObject(query, Integer.class);
+
+        int totalPages = totalSchedules / pagingRequestDto.getPageSize();
+
+        return new PagingResponseDto(schedules,totalPages,totalSchedules,pagingRequestDto.getPageNum(),pagingRequestDto.getPageSize());
     }
 
     private RowMapper<Schedule> scheduleRowMapperV2() {

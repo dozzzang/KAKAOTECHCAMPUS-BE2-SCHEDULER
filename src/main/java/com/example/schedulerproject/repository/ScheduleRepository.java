@@ -1,5 +1,7 @@
 package com.example.schedulerproject.repository;
 
+import com.example.schedulerproject.dto.PagingRequestDto;
+import com.example.schedulerproject.dto.PagingResponseDto;
 import com.example.schedulerproject.dto.ScheduleResponseDto;
 import com.example.schedulerproject.entity.Schedule;
 
@@ -11,4 +13,5 @@ public interface ScheduleRepository {
     Schedule findScheduleByScheduleIdOrElseThrow(Long scheduleId);
     int updateSchedule(Long scheduleId,String contentTodo);
     int deleteSchedule(Long scheduleId);
+    PagingResponseDto findSchedulesPage(PagingRequestDto pagingRequestDto);
 }
