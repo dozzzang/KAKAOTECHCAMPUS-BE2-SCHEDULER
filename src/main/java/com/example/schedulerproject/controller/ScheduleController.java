@@ -5,6 +5,7 @@ import com.example.schedulerproject.dto.PagingResponseDto;
 import com.example.schedulerproject.dto.ScheduleRequestDto;
 import com.example.schedulerproject.dto.ScheduleResponseDto;
 import com.example.schedulerproject.service.ScheduleService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class ScheduleController {
 
     @PostMapping
     public ResponseEntity<ScheduleResponseDto> createSchedule(
-            @RequestBody ScheduleRequestDto dto
+            @Valid @RequestBody ScheduleRequestDto dto
     ) {
         return new ResponseEntity<>(scheduleService.saveSchedule(dto), HttpStatus.CREATED);
     }
@@ -50,14 +51,14 @@ public class ScheduleController {
     @PutMapping("/{scheduleId}")
     public ResponseEntity<ScheduleResponseDto> updateSchedule(
             @PathVariable Long scheduleId,
-            @RequestBody ScheduleRequestDto dto) {
+            @Valid @RequestBody ScheduleRequestDto dto) {
         return new ResponseEntity<>(scheduleService.updateSchedule(scheduleId,dto),HttpStatus.OK);
     }
 
     @DeleteMapping("/{scheduleId}")
     public ResponseEntity<Void> deleteSchedule(
             @PathVariable Long scheduleId,
-            @RequestBody ScheduleRequestDto dto) {
+            @Valid @RequestBody ScheduleRequestDto dto) {
         scheduleService.deleteSchedule(scheduleId,dto);
         return new ResponseEntity<>(HttpStatus.OK);
     }

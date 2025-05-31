@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -53,5 +54,17 @@ public class GlobalExceptionHandler {
                 e.getMessage(),
                 request.getRequestURI());
         return new ResponseEntity<>(errorResponseDto, e.getHttpStatus());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class) // @Valid 검증 실패 시 Spring이 MethodArgumentNotValidException 자동생성
+    public ResponseEntity<ErrorResponseDto> handleValidationException(MethodArgumentNotValidException e, HttpServletRequest request) {
+        String message = e.getBindingResult().getFieldError().getDefaultMessage();
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                "about:blank",
+                "Validation error",
+                400,
+                message,
+                request.getRequestURI());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
 }
